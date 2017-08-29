@@ -1,5 +1,6 @@
 package com.coolweather.android;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
@@ -21,6 +22,7 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.coolweather.android.gson.Forecast;
 import com.coolweather.android.gson.Weather;
+import com.coolweather.android.service.AutoUpdateService;
 import com.coolweather.android.util.HttpUtil;
 import com.coolweather.android.util.Utility;
 
@@ -119,7 +121,7 @@ public class WeatherActivity extends AppCompatActivity {
     }
 
     //根据天气id请求城市天气信息
-    public void requestWeather(String weatherId){
+    public void requestWeather(final String weatherId){
         String weatherUrl = "http://guolin.tech/api/weather?cityid="+ weatherId +"&key=1e44253946214cdaa41a274ae7fb00d6";
         System.out.println("weatherUrl = " +weatherUrl);
         HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
@@ -145,6 +147,7 @@ public class WeatherActivity extends AppCompatActivity {
                             SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
                             editor.putString("weather", responseText);
                             editor.apply();
+                            mWeatherId = weatherId;
                             showWeatherInfo(weather);
                         }else{
                             Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_SHORT).show();
@@ -214,13 +217,16 @@ public class WeatherActivity extends AppCompatActivity {
         aqiText.setText(weather.aqi.city.aqi);
         pm25Text.setText(weather.aqi.city.pm25);
 
-        String comfort = "舒适度: "+weather.suggestion.comfort.info;
-        String carWash = "洗车指数: "+weather.suggestion.carWash.info;
-        String sport = "运动指数: "+weather.suggestion.sport.info;
+        String comfort = "舒适度: " + "\n" +"        " + weather.suggestion.comfort.info;
+        String carWash = "洗车指数: "+ "\n" +"       " + weather.suggestion.carWash.info;
+        String sport = "运动指数: "+ "\n" +"        " + weather.suggestion.sport.info;
         comfortText.setText(comfort);
         carWashText.setText(carWash);
         sportText.setText(sport);
 
         weatherLayout.setVisibility(View.VISIBLE);
+
+        Intent intent = new Intent(this, AutoUpdateService.class);
+        startService(intent);
     }
 }
